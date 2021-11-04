@@ -1,29 +1,44 @@
+import random
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 
-graph = nx.Graph()
-graph.add_nodes_from(range(4))
-graph.add_edge(0, 1)
-graph.add_edge(0, 2)
-graph.add_edge(1, 2)
-graph.add_edge(2, 3)
-graph = nx.generators.cycle_graph(5)
+n = 5
+graph = nx.generators.cycle_graph(n)
 
-def walk_me(v):
-    return np.random.choice(graph[v])
+mat = np.zeros(shape=(n, n))
+for i in range(n):
+    for j in range(n):
+        if j in graph[i]:
+            mat[i, j] = 1 / 2.
+print(np.linalg.eig(mat)[0])
 
-visits = np.array([0] * 5)
-vertex = 0
-unif = np.array([1.] * 5) / 5.
+print(graph[0])
 
+unif = np.array([1.] * n) / n
+
+distrib = np.array([1] + [0] *(n-1))
 data = []
 nsteps = 100
-for i in range(nsteps):
-    visits[vertex] += 1
-    vertex = walk_me(vertex)
-    data.append(sum(np.abs(a - b)**2 for a, b in zip(unif, visits / sum(visits))))
+for k in range(nsteps):
+    distrib = mat.dot(distrib)
+    data.append(np.linalg.norm(unif - distrib))
+distrib = np.array([1, 1] + [0] *(n-2)) / 2
+
+data2 = []
+nsteps = 100
+for k in range(nsteps):
+    distrib = mat.dot(distrib)
+    data2.append(np.linalg.norm(unif - distrib))
+
 plt.plot(list(range(nsteps)), data)
-plt.ylabel("$||v - u||^2$")
+plt.plot(list(range(nsteps)), data2)
+plt.ylabel("$||v - u||$")
 plt.xlabel("step")
-plt.savefig("plot.png")
+plt.savefig("plot_mat_1.png")
+
+plt.plot(list(range(nsteps)), data)
+plt.plot(list(range(nsteps)), data2)
+plt.ylabel("$||v - u||$")
+plt.xlabel("step")
+plt.savefig("plot_mat_2.png")
